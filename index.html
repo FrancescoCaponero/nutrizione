@@ -1,0 +1,737 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#f2f5ee" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#121811" media="(prefers-color-scheme: dark)">
+<meta name="description" content="Dieta, diario nutrizionale e lista della spesa">
+<title>Nutrizione</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&display=swap">
+<style>
+/* Layout: one-column phone app — sticky header, scrolling view, fixed bottom tab bar (Dieta · Diario · Spesa) */
+:root {
+  --bg: #f2f5ee;
+  --surface: #ffffff;
+  --surface-2: #e7ece0;
+  --ink: #1c251b;
+  --muted: #5b6656;
+  --line: #d3dac9;
+  --accent: #3d6a33;
+  --accent-ink: #ffffff;
+  --accent-soft: #dbe8d1;
+  --lvl0: #ffffff;
+  --lvl1: #e4edda;
+  --lvl2: #c4d9b1;
+  --lvl3: #93bb77;
+  --lvl4: #4f8a3b;
+  --lvl-ink: #1c251b;
+  --lvl4-ink: #ffffff;
+  --bad: #bf432b;
+  --bad-soft: #f7ded7;
+  --warn-soft: #f6ecd2;
+  --warn-ink: #6b4b00;
+  --shadow: 0 1px 2px rgb(28 37 27 / 0.06), 0 6px 20px rgb(28 37 27 / 0.06);
+  --f-display: "Bricolage Grotesque", "Segoe UI", Roboto, system-ui, sans-serif;
+  --f-body: "Atkinson Hyperlegible", "Segoe UI", Roboto, system-ui, sans-serif;
+  --r: 14px;
+  --tabbar-h: 64px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #121811; --surface: #1a2219; --surface-2: #232e22; --ink: #e6ede0; --muted: #9ba692; --line: #2e3a2c;
+    --accent: #8fc274; --accent-ink: #0f160e; --accent-soft: #24361e;
+    --lvl0: #1a2219; --lvl1: #213020; --lvl2: #2d4826; --lvl3: #426c2e; --lvl4: #7ab35d; --lvl-ink: #e6ede0; --lvl4-ink: #0f160e;
+    --bad: #f07d64; --bad-soft: #3b2420; --warn-soft: #3a3118; --warn-ink: #f0d28a;
+    --shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 6px 20px rgb(0 0 0 / 0.25);
+    color-scheme: dark;
+  }
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: 16px;
+  line-height: 1.45;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: contain;
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 30; background: var(--bg); }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+.app { max-width: 640px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: env(safe-area-inset-top, 0px) calc(28px + env(safe-area-inset-bottom, 0px)); }
+
+.topbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--bg); padding-bottom: 12px; margin-bottom: 4px; }
+header.top { padding-block: 14px 10px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+header.top h1 { font-family: var(--f-display); font-weight: 700; font-size: 1.65rem; letter-spacing: -0.02em; margin: 0; line-height: 1.1; }
+header.top .right { display: flex; align-items: center; gap: 10px; min-width: 0; }
+header.top .when { color: var(--muted); font-size: 0.82rem; text-align: right; }
+header.top .when b { color: var(--ink); font-weight: 700; }
+
+.status { font-size: 0.85rem; border-radius: 10px; padding: 8px 12px; background: var(--surface-2); color: var(--muted); margin-bottom: 12px; }
+.status.err { background: var(--bad-soft); color: var(--bad); }
+
+h2 { font-family: var(--f-display); font-weight: 700; font-size: 1.2rem; letter-spacing: -0.01em; margin: 0; text-wrap: balance; }
+h3 { font-family: var(--f-display); font-weight: 500; font-size: 1rem; margin: 0; }
+p { margin: 0; }
+.eyebrow { font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+.muted { color: var(--muted); }
+.small { font-size: 0.85rem; }
+.stack { display: flex; flex-direction: column; gap: 16px; }
+.card { background: var(--surface); border-radius: var(--r); box-shadow: var(--shadow); padding: 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.card.warn { background: var(--warn-soft); color: var(--warn-ink); box-shadow: none; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; }
+.row .btn { flex: 1 1 140px; }
+
+/* segmented & chips */
+.seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; background: var(--surface-2); border-radius: 12px; padding: 4px; gap: 4px; }
+.seg button { border: 0; background: transparent; border-radius: 9px; padding: 9px 8px; font-weight: 700; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
+.chips { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.chips button { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 8px 0; font-weight: 700; font-size: 0.9rem; }
+.chips button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.chips button .t { display: block; font-size: 0.62rem; font-weight: 400; letter-spacing: 0.04em; opacity: 0.8; }
+
+/* diet */
+.meal { display: grid; grid-template-columns: 92px 1fr; gap: 12px; padding-block: 12px; border-top: 1px solid var(--line); }
+.meal:first-of-type { border-top: 0; padding-top: 4px; }
+.meal .lbl { font-family: var(--f-display); font-weight: 700; font-size: 0.95rem; }
+.meal .lbl small { display: block; font-family: var(--f-body); font-weight: 400; font-size: 0.72rem; color: var(--muted); }
+.opts { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.opts li { position: relative; padding-left: 16px; }
+.opts li::before { content: ""; position: absolute; left: 2px; top: 0.6em; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+.opts li .q { font-variant-numeric: tabular-nums; font-weight: 700; }
+.rules { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; }
+table.freq { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+table.freq td { padding: 7px 0; border-top: 1px solid var(--line); vertical-align: top; }
+table.freq tr:first-child td { border-top: 0; }
+table.freq td:last-child { text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; padding-left: 12px; }
+details.more { background: var(--surface); border-radius: var(--r); box-shadow: var(--shadow); }
+details.more summary { padding: 14px 16px; font-family: var(--f-display); font-weight: 700; list-style: none; display: flex; justify-content: space-between; align-items: center; }
+details.more summary::-webkit-details-marker { display: none; }
+details.more summary::after { content: "+"; font-size: 1.3rem; color: var(--muted); }
+details.more[open] summary::after { content: "–"; }
+details.more .inner { padding: 0 16px 16px; display: flex; flex-direction: column; gap: 10px; }
+.notice { border-radius: 10px; padding: 10px 12px; background: var(--bad-soft); color: var(--bad); font-size: 0.9rem; }
+
+/* calendar */
+.cal-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.cal-head h2 { text-transform: capitalize; }
+.iconbtn { width: 40px; height: 40px; flex: 0 0 40px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); display: grid; place-items: center; font-size: 1.1rem; line-height: 1; }
+.iconbtn svg { width: 20px; height: 20px; }
+.cal { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; }
+.cal .dow { text-align: center; font-size: 0.7rem; font-weight: 700; color: var(--muted); letter-spacing: 0.06em; padding-bottom: 2px; }
+.day { position: relative; aspect-ratio: 1 / 1.1; max-width: 100%; border-radius: 10px; border: 1px solid var(--line); background: var(--lvl0); color: var(--lvl-ink); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 2px; font-variant-numeric: tabular-nums; }
+.day .n { font-weight: 700; font-size: 0.98rem; }
+.day.out { visibility: hidden; }
+.day.l1 { background: var(--lvl1); border-color: transparent; }
+.day.l2 { background: var(--lvl2); border-color: transparent; }
+.day.l3 { background: var(--lvl3); border-color: transparent; }
+.day.l4 { background: var(--lvl4); border-color: transparent; color: var(--lvl4-ink); }
+.day.today { box-shadow: inset 0 0 0 2px var(--ink); }
+.day.sel { outline: 3px solid var(--accent); outline-offset: 1px; }
+.day .marks { display: flex; gap: 3px; height: 7px; }
+.day .m { width: 7px; height: 7px; border-radius: 50%; }
+.day .m.sym { background: var(--bad); }
+.day .m.gym { background: transparent; border: 2px solid currentColor; }
+.day.future { opacity: 0.55; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 0.78rem; color: var(--muted); align-items: center; }
+.legend .sw { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -2px; margin-right: 4px; }
+.legend .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; vertical-align: 0; }
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.stat { background: var(--surface-2); border-radius: 10px; padding: 10px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.stat .v { font-family: var(--f-display); font-weight: 700; font-size: 1.3rem; font-variant-numeric: tabular-nums; }
+.stat .k { font-size: 0.75rem; color: var(--muted); }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field label { font-weight: 700; font-size: 0.92rem; }
+textarea, input[type="text"], select { width: 100%; border: 1px solid var(--line); background: var(--bg); border-radius: 10px; padding: 10px 12px; font-size: 16px; }
+textarea { min-height: 64px; resize: vertical; }
+.comment { background: var(--accent-soft); border-radius: 10px; padding: 10px 12px; }
+.comment textarea { background: var(--surface); }
+
+/* checklist rows (sheet + spesa) */
+.checks { display: flex; flex-direction: column; gap: 8px; }
+.check { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; border: 1px solid var(--line); background: var(--surface); border-radius: 12px; padding: 13px 14px; min-height: 54px; }
+.check .box { flex: 0 0 26px; height: 26px; border-radius: 8px; border: 2px solid var(--line); display: grid; place-items: center; }
+.check .box svg { width: 16px; height: 16px; opacity: 0; }
+.check[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+.check[aria-pressed="true"] .box { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.check[aria-pressed="true"] .box svg { opacity: 1; }
+.check.neg[aria-pressed="true"] { border-color: var(--bad); background: var(--bad-soft); }
+.check.neg[aria-pressed="true"] .box { background: var(--bad); border-color: var(--bad); color: var(--accent-ink); }
+.check .txt { flex: 1; min-width: 0; font-weight: 700; }
+
+/* sheet */
+.backdrop { position: fixed; inset: 0; background: rgb(0 0 0 / 0.38); z-index: 40; }
+.sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 41; max-height: 92%; overflow-y: auto; background: var(--bg); border-radius: 20px 20px 0 0; box-shadow: 0 -8px 30px rgb(0 0 0 / 0.2); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 10px calc(20px + env(safe-area-inset-bottom, 0px)); }
+.sheet-in { max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+.grip { width: 44px; height: 5px; border-radius: 3px; background: var(--line); margin: 0 auto 2px; }
+.sheet-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.sheet-head .title { text-align: center; flex: 1; min-width: 0; }
+.sheet-head .title h2 { text-transform: capitalize; }
+.btn { border: 0; border-radius: 12px; padding: 12px 16px; font-weight: 700; background: var(--accent); color: var(--accent-ink); min-height: 48px; }
+.btn.ghost { background: var(--surface-2); color: var(--ink); }
+.btn.danger { background: var(--bad); color: var(--accent-ink); }
+.confirm { border-radius: 12px; padding: 12px; background: var(--surface); box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 10px; }
+
+/* spesa */
+.addform { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+.addform select { grid-column: 1 / 2; }
+.addform .btn { grid-row: 1 / 3; grid-column: 2; }
+.progress { height: 8px; border-radius: 4px; background: var(--surface-2); overflow: hidden; }
+.progress > i { display: block; height: 100%; background: var(--accent); width: 0; transition: width 0.25s ease; }
+.cat h3 { display: flex; justify-content: space-between; align-items: baseline; padding-block: 4px; }
+.cat h3 span { font-family: var(--f-body); font-size: 0.8rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.item { display: flex; align-items: stretch; gap: 6px; }
+.item .check { flex: 1; min-height: 50px; padding-block: 10px; }
+.item .check[aria-pressed="true"] .txt { text-decoration: line-through; color: var(--muted); }
+.item .del { flex: 0 0 44px; border: 1px solid var(--line); background: var(--surface); border-radius: 12px; color: var(--muted); font-size: 1.2rem; }
+.item .del.armed { color: var(--bad); font-size: 0.8rem; font-weight: 700; }
+.empty { text-align: center; color: var(--muted); padding: 24px 8px; }
+
+/* tab bar */
+nav.tabs { background: var(--surface-2); border-radius: 14px; padding: 4px; }
+nav.tabs .in { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+nav.tabs button { border: 0; background: transparent; border-radius: 11px; min-height: 46px; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 7px; color: var(--muted); font-weight: 700; font-size: 0.92rem; }
+nav.tabs button svg { width: 21px; height: 21px; flex: 0 0 21px; }
+nav.tabs button[aria-current="page"] { background: var(--surface); color: var(--accent); box-shadow: var(--shadow); }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(24px + env(safe-area-inset-bottom, 0px)); z-index: 50; background: var(--ink); color: var(--bg); border-radius: 10px; padding: 10px 14px; font-size: 0.9rem; max-width: calc(100% - 32px); }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <header class="top">
+      <h1>Nutrizione</h1>
+      <div class="right">
+        <div class="when" id="when"></div>
+        <button class="iconbtn" id="open-backup" aria-label="Backup e impostazioni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v11M7.5 9.5 12 14l4.5-4.5"/><path d="M4 16v2.5A2.5 2.5 0 0 0 6.5 21h11a2.5 2.5 0 0 0 2.5-2.5V16"/></svg></button>
+      </div>
+    </header>
+    <nav class="tabs" aria-label="Sezioni">
+      <div class="in">
+        <button data-tab="dieta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11h16a8 8 0 0 1-16 0Z"/><path d="M7 7c0-1.5 1-2 1-3.5M12 7c0-1.5 1-2 1-3.5M17 7c0-1.5 1-2 1-3.5"/></svg>Dieta</button>
+        <button data-tab="diario"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4M8.5 15l2 2 4-4"/></svg>Diario</button>
+        <button data-tab="spesa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h2.5l2.2 10.5a1.5 1.5 0 0 0 1.5 1.2h8.3a1.5 1.5 0 0 0 1.5-1.2L20.5 8H6.3"/><circle cx="10" cy="20" r="1.3"/><circle cx="17" cy="20" r="1.3"/></svg>Spesa</button>
+      </div>
+    </nav>
+  </div>
+  <div id="status" class="status" hidden></div>
+
+  <!-- DIETA -->
+  <section id="v-dieta" class="stack" hidden>
+    <div class="seg" role="group" aria-label="Piano">
+      <button id="mode-normale" aria-pressed="true">Settimana tipo</button>
+      <button id="mode-acuta" aria-pressed="false">Fase acuta</button>
+    </div>
+    <div class="chips" id="daychips" role="group" aria-label="Giorno"></div>
+    <div class="card" id="meals"></div>
+    <div id="diet-extra" class="stack"></div>
+  </section>
+
+  <!-- DIARIO -->
+  <section id="v-diario" class="stack" hidden>
+    <div id="diary-banner"></div>
+    <div class="card">
+      <div class="cal-head">
+        <button class="iconbtn" id="m-prev" aria-label="Mese precedente">‹</button>
+        <h2 id="m-title"></h2>
+        <button class="iconbtn" id="m-next" aria-label="Mese successivo">›</button>
+      </div>
+      <div class="cal" id="cal"></div>
+      <div class="legend">
+        <span><i class="sw" style="background:var(--lvl1)"></i><i class="sw" style="background:var(--lvl2)"></i><i class="sw" style="background:var(--lvl3)"></i><i class="sw" style="background:var(--lvl4)"></i>obiettivi raggiunti (0–4)</span>
+        <span><i class="dot" style="background:var(--bad)"></i>sintomi</span>
+        <span><i class="dot" style="border:2px solid var(--muted)"></i>allenamento</span>
+      </div>
+      <button class="btn" id="open-today">Compila oggi</button>
+    </div>
+    <div class="card" id="weekcard"></div>
+  </section>
+
+  <!-- SPESA -->
+  <section id="v-spesa" class="stack" hidden>
+    <div class="card">
+      <form class="addform" id="addform" autocomplete="off">
+        <input type="text" id="add-name" placeholder="Aggiungi un prodotto…" aria-label="Nome del prodotto" maxlength="80">
+        <select id="add-cat" aria-label="Reparto"></select>
+        <button class="btn" type="submit">Aggiungi</button>
+      </form>
+      <span id="sp-count" class="muted small"></span>
+      <div class="progress"><i id="sp-bar"></i></div>
+      <div class="row">
+        <button class="btn ghost" id="sp-hide" aria-pressed="false">Nascondi presi</button>
+        <button class="btn ghost" id="sp-reset">Nuova spesa</button>
+      </div>
+    </div>
+    <div id="splist" class="stack"></div>
+  </section>
+</div>
+
+<div id="sheet-root"></div>
+<input type="file" id="import-file" accept=".json,application/json" hidden>
+
+<script>
+/* ---------- Dieta (sintesi dei piani della Dott.ssa Denis) ---------- */
+const DAYS = ["Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato", "Domenica"];
+const DAYS_SHORT = ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"];
+const MEAL_INFO = {
+  colazione: ["Colazione", "appena sveglio"],
+  merenda: ["Merenda", "metà mattina"],
+  pranzo: ["Pranzo", "scegline una"],
+  spuntini: ["Spuntini", "pomeriggio · 2"],
+  cena: ["Cena", "scegline una"],
+  spuntino: ["Spuntino", "metà mattina"],
+  merendaA: ["Merenda", "pomeriggio"]
+};
+const DIET = [
+  { colazione: ["Croissant o sfoglia + frutto"],
+    merenda: ["Mandorle pelate + yogurt S/L"],
+    pranzo: ["120 g cous cous con verdure + pollo", "Frittata di patate (2-3 uova, 2 patate medie, parmigiano) + 100 g verdure cotte + pane", "100 g cous cous al succo di pomodoro + 70 g legumi + menta e basilico", "2 filetti di salmone alla mediterranea + finocchi + pane"],
+    spuntini: ["Taralli + parmigiano + succo di frutta", "Mela a fette + burro di arachidi"],
+    cena: ["Salmone al forno con verdure + pane", "Filetti di platessa con pomodorini, prezzemolo e aglio + pane", "Polpette di tonno e ricotta + 150 g verdure saltate + pane"] },
+  { colazione: ["Oats o overnight oats", "Pane + hummus di ceci + frutto"],
+    merenda: ["Noci + latte S/L"],
+    pranzo: ["120 g insalata di orzo e farro con verdure + 2 uova sode + taralli", "100 g farro + 70 g fagioli + 100 g fagiolini + pomodorini + tonno sott'olio + pesto di rucola", "100 g cous cous + 50 g ceci + 150 g zucchine + mozzarella S/L", "120 g cous cous con cetrioli, carote e rucola + 2 uova sode + salsa yogurt"],
+    spuntini: ["Cracker + frutta secca + succo senza polpa", "Fetta di pane con olio + bresaola"],
+    cena: ["60 g pasta di semola + 60 g pasta di legumi al pomodoro (anche con melanzane) + parmigiano", "120 g mezzemaniche con pesto, melanzane e alici", "Frittata (2-3 uova) con asparagi e parmigiano + pane"] },
+  { colazione: ["2 fette di pane + burro ghee + marmellata + cappuccino"],
+    merenda: ["Nocciole pelate + yogurt S/L"],
+    pranzo: ["120 g penne al salmone e verdure + parmigiano", "100 g riso basmati + 1-2 carote + 100 g feta + avocado", "120 g pasta fredda con crema di rucola e ceci + salmone", "120 g insalata di orzo e farro con pomodorini, olive e prezzemolo + sgombro sott'olio + taralli"],
+    spuntini: ["Frutta + frutta secca (uva + noci, pera + nocciole)", "Mela o pera cotta con cannella + burro di frutta secca"],
+    cena: ["Insalata di valerianella con feta, cetrioli, mela e noci + focaccia", "Piadina con mozzarella S/L, pomodoro, spinaci e hummus (se riesci, due)", "Halloumi S/L grigliato + riso allo zenzero + insalata"] },
+  { colazione: ["4 fette biscottate + burro di frutta secca + banana a fettine + tazza di latte"],
+    merenda: ["Pistacchi + latte S/L"],
+    pranzo: ["120 g risotto cremoso con piselli e gamberetti (mantecato nel burro ghee)", "120 g pasta + 1 zucchina media + 1 ricotta S/L", "80 g risotto ai funghi (burro ghee) + fetta di carne", "100 g risotto alla barbabietola (burro ghee) + stracchino S/L"],
+    spuntini: ["Yogurt + frutti di bosco", "Fetta biscottata + burro ghee + marmellata di fragole"],
+    cena: ["Frittata (2-3 uova) con spinacino e parmigiano + pane", "3 uova + verdure gratinate al parmigiano + focaccia", "Bistecca + patate al rosmarino e verdure + pane"] },
+  { colazione: ["Yogurt bowl con cereali o biscotti sbriciolati + frutti di bosco + noci"],
+    merenda: ["Anacardi + yogurt S/L"],
+    pranzo: ["150 g pasta ripiena al sugo di sgombro e melanzane + parmigiano", "150 g pasta ripiena al burro e salvia + parmigiano", "150 g gnocchi al pomodoro + mozzarella S/L + parmigiano", "100 g farro + 70 g fagioli corona + zucchine, cipolla, feta e menta"],
+    spuntini: ["Gallette di riso o mais + formaggio spalmabile S/L", "Pane tostato + burro di arachidi + banana a fette + gocce di cioccolato"],
+    cena: ["Caesar salad: iceberg, pollo sfilacciato, grana, crostini", "Cecina + focaccia (5 e 5) + verdure", "Pesce spada in padella + verdure", "Piadina con falafel, insalata, pomodoro, avocado + salsa yogurt"] },
+  { colazione: ["Pane con burro di arachidi e marmellata + frutta", "Toast con pomodoro e mozzarella"],
+    merenda: ["1-2 cucchiaini di burro di arachidi + latte S/L"],
+    pranzo: ["Bocconcini di baccalà al burro e prezzemolo + fagiolini e zucchine + pane", "Salmone croccante + verdure + pane", "Orata al forno + patate e verdure + pane", "Sogliola alla mugnaia + insalata di arance, finocchi, olive e scalogno + pane"],
+    spuntini: ["Uva + brie", "Frullato con latte S/L + frutta", "Hummus di ceci + gallette o crackers"],
+    cena: ["Pizza con bresaola, mozzarella S/L, rucola e grana", "Pizza con gorgonzola, pere e noci", "2-3 uova in purgatorio + pane o focaccia", "Burger di carne o vegetale + 200 g patate al forno + verdure"] },
+  { colazione: ["Pane tostato + ricotta + pesca grigliata + noci", "Toast con burro e salmone affumicato"],
+    merenda: ["Mix di frutta secca + yogurt S/L"],
+    pranzo: ["Fetta di carne rossa + 200 g patate al forno + verdure", "Lasagna al ragù bianco + parmigiano + verdure", "Cosce di pollo al forno + patate e verdure", "Polpette al sugo + purè di patate + verdure"],
+    spuntini: ["Macedonia + gocce di cioccolato + noci", "Pane tostato + olio + avocado", "Pane tostato + brie + pere a fette"],
+    cena: ["Pasto fuori casa a piacere", "2 filetti di orata in padella + pane", "Pasta alla carbonara + zucchine + parmigiano", "Frittata (2-3 uova) con carote, patate e rosmarino + pane"] }
+];
+const ACUTA = [
+  { colazione: "Cornetto o sfoglia semplice + banana matura + tè verde", spuntino: "Pane bianco tostato + 2 cucchiaini di confettura", pranzo: "Riso 80 g + pollo + 1 zucchina cotta + olio EVO + parmigiano", merendaA: "Yogurt S/L + 2-3 biscotti secchi", cena: "2-3 patate + merluzzo + 2 carote cotte + pane + olio EVO" },
+  { colazione: "Pan brioche + 2 cucchiaini di confettura + banana matura", spuntino: "Pane bianco + 1-2 cucchiaini di miele", pranzo: "Pasta 100 g con crema di carote e stracchino S/L + parmigiano + olio EVO", merendaA: "Crackers + purea di frutta", cena: "Riso 80 g + 1-2 uova + 1 zucchina cotta + pane + olio EVO" },
+  { colazione: "Cornetto alla marmellata + banana + cappuccino delattosato decaf", spuntino: "Pane bianco tostato + 2 cucchiaini di confettura", pranzo: "Cous cous 100 g + pollo + 100 g zucca cotta + mozzarella S/L + olio EVO", merendaA: "2 fette biscottate + 2 cucchiaini di miele", cena: "2-3 patate + 1 filetto di nasello + 2 carote cotte + pane + olio EVO" },
+  { colazione: "Pane bianco + burro di frutta secca liscio + 2 cucchiaini di confettura + banana", spuntino: "2-3 biscotti secchi + purea di frutta", pranzo: "Riso 80 g + crema di 1 melanzana cotta e sbucciata + 10 g parmigiano + stracchino S/L + olio EVO", merendaA: "Pan brioche + 1-2 cucchiaini di confettura", cena: "2-3 patate + tacchino + 1 zucchina cotta + pane + olio EVO" },
+  { colazione: "Cornetto o sfoglia semplice + banana matura + tè verde", spuntino: "Pane bianco + 1-2 cucchiaini di miele", pranzo: "Pasta 100 g + tonno al naturale + crema di 1 zucchina + parmigiano + olio EVO", merendaA: "2-3 biscotti secchi + purea di frutta", cena: "Riso 80 g + 2 carote cotte + 1-2 uova + pane + olio EVO" },
+  { colazione: "Cornetto alla marmellata + banana + cappuccino delattosato decaf", spuntino: "2-3 biscotti secchi + yogurt S/L", pranzo: "Cous cous 100 g + tacchino + 2 carote cotte + olio EVO", merendaA: "2 fette biscottate + 2 cucchiaini di confettura + 1 cucchiaino di crema di frutta secca", cena: "Gnocchi di patate 250 g + merluzzo + 100 g crema di zucca + parmigiano + olio EVO" },
+  { colazione: "Cornetto alla marmellata + banana + cappuccino delattosato decaf", spuntino: "Pane bianco + 2 cucchiaini di confettura", pranzo: "Riso 80 g + pollo + 2 carote cotte + pane + olio EVO", merendaA: "2-3 biscotti secchi + purea di frutta", cena: "Pasta 100 g + 100 g crema di zucchine + ricottina S/L + parmigiano + 15 g olio EVO" }
+];
+const RULES = [
+  "Pranzo e cena: olio EVO, 1 cucchiaio in più del tuo solito, e parmigiano a piacere",
+  "Carboidrati non integrali, circa 120 g a pasto",
+  "Mangia prima carboidrati e proteine, poi le verdure",
+  "Verdure meglio cotte; attenzione a semi e bucce dure",
+  "La colazione standard (croissant o sfoglia + frutto) va bene ogni giorno",
+  "Dopo cena: un frutto o un dessert",
+  "Barretta + banana + 20 g di cioccolato solo come spuntino d'emergenza"
+];
+const FREQ = [["Pesce", "2–3 volte (in scatola max 1)"], ["Legumi", "3 volte"], ["Carne bianca", "max 2 volte"], ["Carne rossa", "max 1 volta"], ["Affettati", "circa 50 g"], ["Uova", "4–6"], ["Latte o yogurt S/L", "1 al giorno"], ["Acqua", "almeno 2 litri al giorno"]];
+const MEALPREP = [
+  "Prepara il 70%, completa il 30% al momento",
+  "La domenica cuoci le basi (riso, cous cous, farro, orzo) con un filo d'olio e congelale in monoporzioni; la pasta no, tienila in frigo per il giorno dopo",
+  "Congela anche sughi, pesti e legumi avanzati",
+  "Carne, pesce, uova sode e formaggi in frigo, non in freezer; verdure cotte in frigo al massimo 3 giorni",
+  "La mattina componi la schiscetta: base + proteina + verdura + olio (+ parmigiano)",
+  "Per cambiare gusto: spezie, salsa allo yogurt, emulsioni (aceto balsamico e olio, soia e tahina)"
+];
+const ACUTA_SI = "Pane bianco, fette biscottate, crackers semplici, riso bianco, pasta raffinata, semolino, polenta fine; patate sbucciate (lesse, al vapore, purè); pesce, pollo o tacchino tenero, carne magra macinata, uova, tofu morbido; carote, zucchine, zucca, melanzana senza buccia, spinaci ben cotti (meglio passati o frullati); banana matura, mela o pera cotta sbucciata, melone; latte e yogurt delattosati; poco olio EVO; frutta secca solo in crema liscia.";
+const ACUTA_NO = "Cereali integrali, crusca, muesli; legumi interi; frutta secca intera, semi, popcorn; verdure crude, mais, funghi, sedano, finocchio, carciofi, asparagi; frutta essiccata o con buccia; bucce di patate, pomodori e frutta; carne dura o nervosa; ultraprocessati.";
+
+/* lista della spesa di partenza, ricavata dalla dieta */
+const DEFAULT_SPESA = {
+  "Pesce": ["Salmone fresco", "Salmone affumicato", "Orata", "Platessa", "Sogliola", "Pesce spada", "Baccalà", "Gamberetti", "Alici", "Sgombro sott'olio", "Tonno sott'olio"],
+  "Carne e uova": ["Petto di pollo (o straccetti)", "Cosce di pollo", "Carne rossa (bistecca o fettine)", "Macinato", "Burger di carne o vegetali", "Bresaola", "Guanciale o pancetta", "Uova"],
+  "Latticini senza lattosio": ["Latte", "Yogurt", "Mozzarella", "Ricotta", "Stracchino", "Formaggio spalmabile"],
+  "Altri formaggi e burro": ["Parmigiano o grana", "Feta", "Halloumi", "Brie", "Gorgonzola", "Burro", "Burro ghee"],
+  "Frutta": ["Banane", "Mele", "Pere", "Pesche", "Uva", "Arance", "Frutti di bosco", "Avocado"],
+  "Verdura": ["Zucchine", "Carote", "Melanzane", "Finocchi", "Fagiolini", "Asparagi", "Spinaci", "Funghi", "Barbabietola", "Cetrioli", "Pomodorini", "Patate", "Insalata: valerianella, iceberg, rucola", "Cipolla, scalogno, aglio", "Erbe: prezzemolo, basilico, menta, salvia, rosmarino", "Zenzero", "Piselli surgelati", "Mix di verdure surgelate"],
+  "Pane, cereali e pasta": ["Pane bianco", "Focaccia", "Piadine", "Croissant o sfoglie", "Fette biscottate", "Biscotti secchi o cereali per la colazione", "Fiocchi d'avena", "Taralli", "Cracker", "Gallette di riso o mais", "Crostini", "Pasta di semola (penne, mezzemaniche)", "Pasta ripiena", "Gnocchi", "Sfoglie per lasagna", "Riso basmati e riso da risotto", "Cous cous", "Farro", "Orzo", "Basi per pizza"],
+  "Legumi": ["Ceci", "Fagioli (anche corona)", "Pasta di legumi", "Hummus di ceci", "Falafel", "Cecina"],
+  "Frutta secca e creme": ["Mandorle pelate", "Noci", "Nocciole pelate", "Pistacchi", "Anacardi", "Burro di arachidi", "Burro di frutta secca (mandorle o nocciole)"],
+  "Dispensa": ["Olio EVO (anche in monodose)", "Passata e succo di pomodoro", "Pesto", "Olive", "Marmellata (anche di fragole)", "Gocce di cioccolato", "Succo di frutta 100%", "Cannella", "Spezie: paprika, curry, pepe", "Aceto balsamico, salsa di soia, tahina"]
+};
+function defaultItems() { let n = 0; const out = []; for (const [cat, names] of Object.entries(DEFAULT_SPESA)) for (const nome of names) { n++; out.push({ id: "s" + String(n).padStart(2, "0"), nome, cat, preso: false }); } return out; }
+
+/* ---------- Diario ---------- */
+const START = new Date(2026, 6, 13);
+const GOALS = [
+  { k: "colazione", q: "Hai fatto la colazione completa?" },
+  { k: "spuntini", q: "Hai fatto tutti gli spuntini?" },
+  { k: "olio", q: "Hai aggiunto l'olio ai pasti?" },
+  { k: "frutta", q: "Hai mangiato una fonte di frutta secca?" },
+  { k: "sintomi", q: "Hai avuto sintomi intestinali?", neg: true },
+  { k: "allenamento", q: "Ti sei allenato?" }
+];
+const EMPTY_DAY = { colazione: false, spuntini: false, olio: false, frutta: false, sintomi: false, allenamento: false, nota: "" };
+const WEEK_Q = [
+  ["sintomi", "Se ci sono stati sintomi intestinali, quali?", "Scala di Bristol, gonfiore, mal di pancia…"],
+  ["bene", "Cosa è andato bene questa settimana?", ""],
+  ["migliorare", "Cosa si potrebbe migliorare?", ""],
+  ["riflessioni", "Riflessioni sul percorso fino ad ora", ""]
+];
+const CATS = Object.keys(DEFAULT_SPESA).concat(["Altro"]);
+const CHECK_SVG = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.5l3.2 3L13 4.5"/></svg>';
+const BACKUP_DAYS = 14;
+
+/* ---------- state & storage (solo su questo telefono) ---------- */
+const KEY = "nutrizione-dati-v1";
+const META_KEY = "nutrizione-meta-v1";
+const S = {
+  diary: {}, weeks: {}, spesa: null,
+  tab: "diario", dietMode: "normale", dietDay: todayIdx(),
+  month: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+  sel: dkey(new Date()), sheet: null, hideTaken: false,
+  pendingImport: null, importError: "", installEvt: null
+};
+let META = {};
+
+function esc(s) { return String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+function dkey(d) { return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+function parseKey(k) { const [y, m, d] = k.split("-").map(Number); return new Date(y, m - 1, d); }
+function todayIdx() { return (new Date().getDay() + 6) % 7; }
+function weekNo(d) { const diff = Math.round((new Date(d.getFullYear(), d.getMonth(), d.getDate()) - START) / 86400000); return diff < 0 ? null : Math.floor(diff / 7) + 1; }
+function weekStart(n) { const d = new Date(START); d.setDate(d.getDate() + (n - 1) * 7); return d; }
+function fmtDate(d, opts) { return d.toLocaleDateString("it-IT", opts); }
+function qty(s) { return esc(s).replace(/(\d+(?:[.,]\d+)?(?:-\d+)?\s?g\b)/g, '<span class="q">$1</span>'); }
+function score(e) { return e ? ["colazione", "spuntini", "olio", "frutta"].filter(k => e[k]).length : 0; }
+function daysAgo(ts) { return Math.floor((Date.now() - ts) / 86400000); }
+
+function loadAll() {
+  try { META = JSON.parse(localStorage.getItem(META_KEY) || "{}") || {}; } catch (e) { META = {}; }
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (raw) { const d = JSON.parse(raw); S.diary = d.diario || {}; S.weeks = d.settimane || {}; S.spesa = d.spesa && Array.isArray(d.spesa.items) ? d.spesa : null; }
+  } catch (e) { showStatus("Non riesco a leggere i dati salvati su questo telefono.", true); }
+  if (!S.spesa) S.spesa = { items: defaultItems() };
+  try { S.hideTaken = localStorage.getItem("nutrizione-nascondi") === "1"; } catch (e) {}
+}
+function saveMeta() { try { localStorage.setItem(META_KEY, JSON.stringify(META)); } catch (e) {} }
+function persist() {
+  try {
+    localStorage.setItem(KEY, JSON.stringify({ diario: S.diary, settimane: S.weeks, spesa: S.spesa }));
+    META.modificato = Date.now(); saveMeta();
+  } catch (e) { showStatus("Non riesco a salvare: lo spazio del browser potrebbe essere pieno. Fai subito un backup.", true); }
+}
+const timers = {};
+function persistLater(ms = 500) { clearTimeout(timers.p); timers.p = setTimeout(persist, ms); }
+window.addEventListener("pagehide", () => { if (timers.p) { clearTimeout(timers.p); persist(); } });
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden" && timers.p) { clearTimeout(timers.p); timers.p = null; persist(); } });
+
+function showStatus(msg, err) { const el = document.getElementById("status"); el.textContent = msg; el.className = "status" + (err ? " err" : ""); el.hidden = !msg; }
+let toastT;
+function toast(msg) { let t = document.querySelector(".toast"); if (!t) { t = document.createElement("div"); t.className = "toast"; t.setAttribute("role", "status"); document.body.appendChild(t); } t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, 2000); }
+
+/* ---------- tabs ---------- */
+function setTab(t, push) {
+  if (!["dieta", "diario", "spesa"].includes(t)) t = "diario";
+  S.tab = t;
+  for (const v of ["dieta", "diario", "spesa"]) document.getElementById("v-" + v).hidden = v !== t;
+  document.querySelectorAll("nav.tabs button").forEach(b => { if (b.dataset.tab === t) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current"); });
+  if (push) { try { history.replaceState(null, "", "#" + t); } catch (e) {} }
+  window.scrollTo(0, 0);
+}
+document.querySelectorAll("nav.tabs button").forEach(b => b.addEventListener("click", () => setTab(b.dataset.tab, true)));
+window.addEventListener("hashchange", () => setTab(location.hash.replace("#", ""), false));
+
+function renderHeader() {
+  const d = new Date(); const n = weekNo(d);
+  document.getElementById("when").innerHTML = esc(fmtDate(d, { weekday: "short", day: "numeric", month: "short" })) + (n ? "<br><b>Settimana " + n + "</b>" : "");
+}
+
+/* ---------- DIETA ---------- */
+function renderDiet() {
+  document.getElementById("mode-normale").setAttribute("aria-pressed", S.dietMode === "normale");
+  document.getElementById("mode-acuta").setAttribute("aria-pressed", S.dietMode === "acuta");
+  const chips = document.getElementById("daychips");
+  chips.innerHTML = DAYS_SHORT.map((d, i) => `<button data-i="${i}" aria-pressed="${i === S.dietDay}" aria-label="${DAYS[i]}">${d}<span class="t">${i === todayIdx() ? "oggi" : "&nbsp;"}</span></button>`).join("");
+  chips.querySelectorAll("button").forEach(b => b.addEventListener("click", () => { S.dietDay = +b.dataset.i; renderDiet(); }));
+  let body = "";
+  if (S.dietMode === "normale") {
+    const day = DIET[S.dietDay];
+    for (const k of ["colazione", "merenda", "pranzo", "spuntini", "cena"]) {
+      const [lbl, sub] = MEAL_INFO[k];
+      body += `<div class="meal"><div class="lbl">${lbl}<small>${sub}</small></div><ul class="opts">${day[k].map(o => `<li>${qty(o)}</li>`).join("")}</ul></div>`;
+    }
+  } else {
+    const day = ACUTA[S.dietDay];
+    for (const k of ["colazione", "spuntino", "pranzo", "merendaA", "cena"]) {
+      const [lbl, sub] = MEAL_INFO[k];
+      body += `<div class="meal"><div class="lbl">${lbl}<small>${sub}</small></div><ul class="opts"><li>${qty(day[k])}</li></ul></div>`;
+    }
+  }
+  document.getElementById("meals").innerHTML = `<div><div class="eyebrow">${S.dietMode === "acuta" ? "Fase acuta · basso residuo" : "Settimana tipo"}</div><h2>${DAYS[S.dietDay]}</h2></div><div>${body}</div>`;
+  const extra = document.getElementById("diet-extra");
+  if (S.dietMode === "normale") {
+    extra.innerHTML = `
+      <div class="card"><h2>Regole del piatto</h2><ul class="rules">${RULES.map(r => `<li>${esc(r)}</li>`).join("")}</ul></div>
+      <div class="card"><h2>Frequenze settimanali</h2><table class="freq"><tbody>${FREQ.map(([a, b]) => `<tr><td>${esc(a)}</td><td>${esc(b)}</td></tr>`).join("")}</tbody></table></div>
+      <details class="more"><summary>Meal prep</summary><div class="inner"><ul class="rules">${MEALPREP.map(r => `<li>${esc(r)}</li>`).join("")}</ul></div></details>
+      <p class="muted small">S/L = senza lattosio. Le opzioni dello stesso pasto sono alternative; i giorni sono indicativi.</p>`;
+  } else {
+    extra.innerHTML = `
+      <div class="notice">Solo durante una riacutizzazione, insieme alle indicazioni del gastroenterologo. Non va protratta senza indicazione. 80–100 g di verdura cotta per pasto.</div>
+      <div class="card"><h2>Da preferire</h2><p>${esc(ACUTA_SI)}</p></div>
+      <div class="card"><h2>Da evitare per ora</h2><p>${esc(ACUTA_NO)}</p></div>`;
+  }
+}
+document.getElementById("mode-normale").addEventListener("click", () => { S.dietMode = "normale"; renderDiet(); });
+document.getElementById("mode-acuta").addEventListener("click", () => { S.dietMode = "acuta"; renderDiet(); });
+
+/* ---------- DIARIO ---------- */
+function renderBanner() {
+  const box = document.getElementById("diary-banner");
+  const hasData = Object.keys(S.diary).length > 0;
+  if (!hasData && !META.benvenutoChiuso) {
+    box.innerHTML = `<div class="card"><h2>Benvenuto</h2><p>I dati di questa app restano solo su questo telefono. Se hai un file di backup, importalo per ritrovare il diario delle settimane passate.</p><div class="row"><button class="btn" data-act="import">Importa backup</button><button class="btn ghost" data-act="skip">Inizia da zero</button></div></div>`;
+  } else if (hasData && (!META.ultimoBackup || daysAgo(META.ultimoBackup) >= BACKUP_DAYS)) {
+    const txt = META.ultimoBackup ? `Ultimo backup ${daysAgo(META.ultimoBackup)} giorni fa.` : "Non hai ancora fatto un backup.";
+    box.innerHTML = `<div class="card warn"><p><b>${txt}</b> Se perdi o cambi telefono, il diario si recupera solo da un backup.</p><button class="btn" data-act="backup">Fai il backup</button></div>`;
+  } else box.innerHTML = "";
+  box.querySelectorAll("[data-act]").forEach(b => b.addEventListener("click", () => {
+    const a = b.dataset.act;
+    if (a === "import") document.getElementById("import-file").click();
+    else if (a === "skip") { META.benvenutoChiuso = true; saveMeta(); renderBanner(); }
+    else openBackup();
+  }));
+}
+function renderDiary() {
+  const m = S.month;
+  document.getElementById("m-title").textContent = fmtDate(m, { month: "long", year: "numeric" });
+  const first = (m.getDay() + 6) % 7;
+  const days = new Date(m.getFullYear(), m.getMonth() + 1, 0).getDate();
+  const today = dkey(new Date());
+  let html = DAYS_SHORT.map(d => `<div class="dow">${d.slice(0, 2).toUpperCase()}</div>`).join("");
+  for (let i = 0; i < first; i++) html += `<div class="day out" aria-hidden="true"></div>`;
+  for (let d = 1; d <= days; d++) {
+    const date = new Date(m.getFullYear(), m.getMonth(), d); const k = dkey(date); const e = S.diary[k];
+    const sc = score(e);
+    const cls = ["day", e ? "l" + sc : "", k === today ? "today" : "", k === S.sel ? "sel" : "", k > today ? "future" : ""].join(" ");
+    const marks = (e && e.sintomi ? '<i class="m sym"></i>' : "") + (e && e.allenamento ? '<i class="m gym"></i>' : "");
+    const label = fmtDate(date, { weekday: "long", day: "numeric", month: "long" }) + (e ? `, ${sc} obiettivi su 4` + (e.sintomi ? ", sintomi" : "") + (e.allenamento ? ", allenamento" : "") : ", da compilare");
+    html += `<button class="${cls}" data-k="${k}" aria-label="${esc(label)}"><span class="n">${d}</span><span class="marks">${marks}</span></button>`;
+  }
+  const cal = document.getElementById("cal");
+  cal.innerHTML = html;
+  cal.querySelectorAll("button.day").forEach(b => b.addEventListener("click", () => { S.sel = b.dataset.k; renderDiary(); openDay(b.dataset.k); }));
+  renderWeek();
+  renderBanner();
+}
+document.getElementById("m-prev").addEventListener("click", () => { S.month = new Date(S.month.getFullYear(), S.month.getMonth() - 1, 1); renderDiary(); });
+document.getElementById("m-next").addEventListener("click", () => { S.month = new Date(S.month.getFullYear(), S.month.getMonth() + 1, 1); renderDiary(); });
+document.getElementById("open-today").addEventListener("click", () => { const k = dkey(new Date()); S.sel = k; S.month = new Date(new Date().getFullYear(), new Date().getMonth(), 1); renderDiary(); openDay(k); });
+
+function renderWeek() {
+  const card = document.getElementById("weekcard");
+  const n = weekNo(parseKey(S.sel));
+  if (!n) { card.innerHTML = `<h2>Settimana</h2><p class="muted">Il percorso è iniziato il 13 luglio 2026: scegli un giorno da quella data in poi.</p>`; return; }
+  const ws = weekStart(n); const we = new Date(ws); we.setDate(we.getDate() + 6);
+  let done = 0, sym = 0, gym = 0, filled = 0;
+  const cnt = { colazione: 0, spuntini: 0, olio: 0, frutta: 0 };
+  for (let i = 0; i < 7; i++) { const d = new Date(ws); d.setDate(d.getDate() + i); const e = S.diary[dkey(d)]; if (!e) continue; filled++; done += score(e); if (e.sintomi) sym++; if (e.allenamento) gym++; for (const k in cnt) if (e[k]) cnt[k]++; }
+  const pct = filled ? Math.round(done / (filled * 4) * 100) : 0;
+  const w = S.weeks[String(n)] || {};
+  card.innerHTML = `
+    <div><div class="eyebrow">${esc(fmtDate(ws, { day: "numeric", month: "short" }))} – ${esc(fmtDate(we, { day: "numeric", month: "short" }))}</div><h2>Settimana ${n} del percorso</h2></div>
+    <div class="stats"><div class="stat"><span class="v">${filled ? pct + "%" : "–"}</span><span class="k">obiettivi${filled ? ` · ${done} su ${filled * 4}` : ""}</span></div><div class="stat"><span class="v">${sym}</span><span class="k">giorni con sintomi</span></div><div class="stat"><span class="v">${gym}</span><span class="k">allenamenti</span></div></div>
+    <p class="muted small">${filled
+      ? `Calcolato su <b>${filled} ${filled === 1 ? "giorno compilato" : "giorni compilati"}</b>: ${done} ${done === 1 ? "obiettivo raggiunto" : "obiettivi raggiunti"} su ${filled * 4} (4 al giorno). Colazione ${cnt.colazione}, spuntini ${cnt.spuntini}, olio ${cnt.olio}, frutta secca ${cnt.frutta}. Sintomi e allenamento non entrano nella percentuale.`
+      : "Nessun giorno compilato in questa settimana: la percentuale conta solo i giorni in cui metti almeno una spunta."}</p>
+    ${WEEK_Q.map(([k, q, ph]) => `<div class="field"><label for="w-${k}">${esc(q)}</label><textarea id="w-${k}" data-k="${k}" placeholder="${esc(ph)}" rows="2">${esc(w[k] || "")}</textarea></div>`).join("")}
+    <div class="field comment"><label for="w-commento">Commento della nutrizionista</label><textarea id="w-commento" data-k="commento" rows="2" placeholder="Annota qui il suo feedback">${esc(w.commento || "")}</textarea></div>`;
+  card.querySelectorAll("textarea").forEach(t => t.addEventListener("input", () => {
+    const cur = Object.assign({}, S.weeks[String(n)] || {}); cur[t.dataset.k] = t.value; S.weeks[String(n)] = cur; persistLater();
+  }));
+}
+
+/* ---------- sheets (giorno, backup) ---------- */
+const root = document.getElementById("sheet-root");
+function closeSheet() { S.sheet = null; S.pendingImport = null; S.importError = ""; root.innerHTML = ""; document.body.style.overflow = ""; }
+document.addEventListener("keydown", e => { if (e.key === "Escape" && S.sheet) closeSheet(); });
+function mountSheet(inner, label) {
+  root.innerHTML = `<div class="backdrop" id="bd"></div><div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(label)}"><div class="sheet-in"><div class="grip"></div>${inner}</div></div>`;
+  document.body.style.overflow = "hidden";
+  root.querySelector("#bd").addEventListener("click", closeSheet);
+}
+function openDay(k) { S.sheet = { type: "day", k }; renderDay(); }
+function renderDay() {
+  const k = S.sheet.k; const date = parseKey(k); const e = S.diary[k] || {}; const n = weekNo(date);
+  mountSheet(`
+    <div class="sheet-head">
+      <button class="iconbtn" id="d-prev" aria-label="Giorno precedente">‹</button>
+      <div class="title"><div class="eyebrow">${n ? "Settimana " + n : "&nbsp;"}</div><h2>${esc(fmtDate(date, { weekday: "long", day: "numeric", month: "long" }))}</h2></div>
+      <button class="iconbtn" id="d-next" aria-label="Giorno successivo">›</button>
+    </div>
+    <div class="checks">${GOALS.map(g => `<button class="check${g.neg ? " neg" : ""}" data-k="${g.k}" aria-pressed="${!!e[g.k]}"><span class="box">${CHECK_SVG}</span><span class="txt">${esc(g.q)}</span></button>`).join("")}</div>
+    <div class="field"><label for="day-note">Note del giorno</label><textarea id="day-note" rows="2" placeholder="Es. 2 spuntini, metà porzione, cena fuori…">${esc(e.nota || "")}</textarea></div>
+    <button class="btn" id="d-close">Fatto</button>`, "Diario del giorno");
+  root.querySelector("#d-close").addEventListener("click", closeSheet);
+  root.querySelector("#d-prev").addEventListener("click", () => shiftDay(-1));
+  root.querySelector("#d-next").addEventListener("click", () => shiftDay(1));
+  root.querySelectorAll(".check").forEach(b => b.addEventListener("click", () => {
+    const cur = Object.assign({}, EMPTY_DAY, S.diary[k] || {});
+    cur[b.dataset.k] = !cur[b.dataset.k];
+    S.diary[k] = cur; b.setAttribute("aria-pressed", cur[b.dataset.k]);
+    persist(); renderDiary();
+  }));
+  root.querySelector("#day-note").addEventListener("input", ev => {
+    const cur = Object.assign({}, EMPTY_DAY, S.diary[k] || {}); cur.nota = ev.target.value; S.diary[k] = cur; persistLater();
+  });
+}
+function shiftDay(delta) {
+  if (timers.p) { clearTimeout(timers.p); timers.p = null; persist(); }
+  const d = parseKey(S.sheet.k); d.setDate(d.getDate() + delta); const k = dkey(d);
+  S.sel = k; S.sheet.k = k;
+  if (d.getMonth() !== S.month.getMonth() || d.getFullYear() !== S.month.getFullYear()) S.month = new Date(d.getFullYear(), d.getMonth(), 1);
+  renderDay(); renderDiary();
+}
+
+function openBackup() { S.sheet = { type: "backup" }; renderBackup(); }
+function renderBackup() {
+  const nDays = Object.keys(S.diary).length;
+  const last = META.ultimoBackup ? fmtDate(new Date(META.ultimoBackup), { day: "numeric", month: "long", year: "numeric" }) : "mai";
+  const p = S.pendingImport;
+  const confirm = p ? `<div class="confirm"><p><b>Backup del ${esc(p.quando)}</b>: ${p.giorni} giorni di diario, ${p.settimane} settimane, ${p.prodotti} prodotti in lista.</p><p class="muted small">Sostituisce i dati che hai ora su questo telefono.</p><div class="row"><button class="btn" id="imp-ok">Sostituisci i dati</button><button class="btn ghost" id="imp-no">Annulla</button></div></div>` : "";
+  const err = S.importError ? `<div class="notice">${esc(S.importError)}</div>` : "";
+  const install = S.installEvt ? `<button class="btn" id="install">Installa l'app sul telefono</button>` : "";
+  mountSheet(`
+    <div class="sheet-head"><span style="width:40px"></span><div class="title"><h2>Backup</h2></div><button class="iconbtn" id="b-close" aria-label="Chiudi">×</button></div>
+    ${install}
+    <div class="card"><p>I dati restano solo su questo telefono: ${nDays} giorni di diario e ${items().length} prodotti in lista.</p><p class="muted small">Ultimo backup: ${esc(last)}. Salvalo su Drive o mandalo a te stesso, così non lo perdi se cambi telefono.</p>
+      <div class="row"><button class="btn" id="exp-share">Salva backup</button><button class="btn ghost" id="exp-dl">Scarica il file</button></div></div>
+    <div class="card"><p>Hai un file di backup? Importalo per ritrovare i dati.</p><button class="btn ghost" id="imp">Importa backup</button>${err}${confirm}</div>`, "Backup");
+  root.querySelector("#b-close").addEventListener("click", closeSheet);
+  root.querySelector("#exp-share").addEventListener("click", () => exportBackup(true));
+  root.querySelector("#exp-dl").addEventListener("click", () => exportBackup(false));
+  root.querySelector("#imp").addEventListener("click", () => document.getElementById("import-file").click());
+  const ok = root.querySelector("#imp-ok"); if (ok) ok.addEventListener("click", applyImport);
+  const no = root.querySelector("#imp-no"); if (no) no.addEventListener("click", () => { S.pendingImport = null; renderBackup(); });
+  const ins = root.querySelector("#install"); if (ins) ins.addEventListener("click", async () => { const ev = S.installEvt; S.installEvt = null; try { ev.prompt(); await ev.userChoice; } catch (e) {} renderBackup(); });
+}
+document.getElementById("open-backup").addEventListener("click", openBackup);
+
+function backupPayload() { return { app: "nutrizione", formato: 1, esportato: new Date().toISOString(), diario: S.diary, settimane: S.weeks, spesa: S.spesa }; }
+function markBackup() { META.ultimoBackup = Date.now(); saveMeta(); renderBanner(); if (S.sheet && S.sheet.type === "backup") renderBackup(); toast("Backup salvato"); }
+async function exportBackup(share) {
+  if (timers.p) { clearTimeout(timers.p); timers.p = null; persist(); }
+  const name = "nutrizione-backup-" + dkey(new Date()) + ".json";
+  const blob = new Blob([JSON.stringify(backupPayload(), null, 1)], { type: "application/json" });
+  if (share) {
+    try {
+      const file = new File([blob], name, { type: "application/json" });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: "Backup Nutrizione" }); markBackup(); return; }
+    } catch (e) { if (e && e.name === "AbortError") return; }
+  }
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a"); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+  markBackup();
+}
+document.getElementById("import-file").addEventListener("change", async ev => {
+  const f = ev.target.files && ev.target.files[0]; ev.target.value = "";
+  if (!f) return;
+  S.importError = ""; S.pendingImport = null;
+  try {
+    const obj = JSON.parse(await f.text());
+    if (!obj || obj.app !== "nutrizione" || typeof obj.diario !== "object") throw new Error("formato");
+    S.pendingImport = {
+      data: obj,
+      quando: obj.esportato ? fmtDate(new Date(obj.esportato), { day: "numeric", month: "long", year: "numeric" }) : "data sconosciuta",
+      giorni: Object.keys(obj.diario || {}).length, settimane: Object.keys(obj.settimane || {}).length,
+      prodotti: obj.spesa && Array.isArray(obj.spesa.items) ? obj.spesa.items.length : 0
+    };
+  } catch (e) { S.importError = "Questo file non è un backup di Nutrizione. Scegli il file .json che hai esportato dall'app."; }
+  if (!S.sheet || S.sheet.type !== "backup") S.sheet = { type: "backup" };
+  renderBackup();
+});
+function applyImport() {
+  const obj = S.pendingImport && S.pendingImport.data; if (!obj) return;
+  S.diary = obj.diario || {}; S.weeks = obj.settimane || {};
+  S.spesa = obj.spesa && Array.isArray(obj.spesa.items) ? obj.spesa : { items: defaultItems() };
+  persist();
+  META.importato = Date.now(); META.benvenutoChiuso = true; if (!META.ultimoBackup && obj.esportato) META.ultimoBackup = new Date(obj.esportato).getTime(); saveMeta();
+  closeSheet(); renderAll(); toast("Dati importati");
+}
+
+/* ---------- SPESA ---------- */
+document.getElementById("add-cat").innerHTML = CATS.map(c => `<option>${esc(c)}</option>`).join("");
+function items() { return (S.spesa && Array.isArray(S.spesa.items)) ? S.spesa.items : []; }
+function saveSpesa(list) { S.spesa = { items: list }; persist(); renderSpesa(); }
+function renderSpesa() {
+  const list = items();
+  const taken = list.filter(i => i.preso).length;
+  document.getElementById("sp-count").textContent = list.length ? `${taken} di ${list.length} nel carrello` : "";
+  document.getElementById("sp-bar").style.width = list.length ? (taken / list.length * 100) + "%" : "0";
+  const hb = document.getElementById("sp-hide"); hb.setAttribute("aria-pressed", S.hideTaken); hb.textContent = S.hideTaken ? "Mostra presi" : "Nascondi presi";
+  const box = document.getElementById("splist");
+  if (!list.length) { box.innerHTML = `<div class="card empty">La lista è vuota. Scrivi un prodotto qui sopra, scegli il reparto e tocca Aggiungi.</div>`; return; }
+  const cats = CATS.filter(c => list.some(i => i.cat === c)).concat([...new Set(list.map(i => i.cat))].filter(c => !CATS.includes(c)));
+  box.innerHTML = cats.map(c => {
+    const all = list.filter(i => i.cat === c); const vis = S.hideTaken ? all.filter(i => !i.preso) : all;
+    if (!vis.length) return "";
+    return `<div class="card cat"><h3>${esc(c)}<span>${all.filter(i => i.preso).length}/${all.length}</span></h3><div class="checks">${vis.map(i => `<div class="item"><button class="check" data-id="${esc(i.id)}" aria-pressed="${!!i.preso}"><span class="box">${CHECK_SVG}</span><span class="txt">${esc(i.nome)}</span></button><button class="del" data-del="${esc(i.id)}" aria-label="Elimina ${esc(i.nome)}">×</button></div>`).join("")}</div></div>`;
+  }).join("") || `<div class="card empty">Hai preso tutto. Tocca Nuova spesa per ricominciare.</div>`;
+  box.querySelectorAll(".check").forEach(b => b.addEventListener("click", () => saveSpesa(items().map(i => i.id === b.dataset.id ? Object.assign({}, i, { preso: !i.preso }) : i))));
+  box.querySelectorAll(".del").forEach(b => b.addEventListener("click", () => {
+    if (b.dataset.armed) { const it = items().find(i => i.id === b.dataset.del); saveSpesa(items().filter(i => i.id !== b.dataset.del)); toast((it ? it.nome : "Prodotto") + " eliminato"); return; }
+    b.dataset.armed = "1"; b.textContent = "Ok?"; b.classList.add("armed");
+    setTimeout(() => { if (b.isConnected) { delete b.dataset.armed; b.textContent = "×"; b.classList.remove("armed"); } }, 2500);
+  }));
+}
+document.getElementById("addform").addEventListener("submit", ev => {
+  ev.preventDefault();
+  const inp = document.getElementById("add-name"); const nome = inp.value.trim(); if (!nome) { inp.focus(); return; }
+  const cat = document.getElementById("add-cat").value;
+  if (items().some(i => i.nome.toLowerCase() === nome.toLowerCase())) { toast(nome + " è già nella lista"); return; }
+  const id = "p" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  saveSpesa(items().concat([{ id, nome, cat, preso: false }]));
+  inp.value = ""; toast(nome + " aggiunto in " + cat);
+});
+document.getElementById("sp-hide").addEventListener("click", () => { S.hideTaken = !S.hideTaken; try { localStorage.setItem("nutrizione-nascondi", S.hideTaken ? "1" : ""); } catch (e) {} renderSpesa(); });
+const resetBtn = document.getElementById("sp-reset");
+resetBtn.addEventListener("click", () => {
+  if (resetBtn.dataset.armed) { delete resetBtn.dataset.armed; resetBtn.textContent = "Nuova spesa"; resetBtn.classList.remove("danger"); saveSpesa(items().map(i => Object.assign({}, i, { preso: false }))); toast("Spunte azzerate"); return; }
+  resetBtn.dataset.armed = "1"; resetBtn.textContent = "Tocca di nuovo per azzerare"; resetBtn.classList.add("danger");
+  setTimeout(() => { if (resetBtn.dataset.armed) { delete resetBtn.dataset.armed; resetBtn.textContent = "Nuova spesa"; resetBtn.classList.remove("danger"); } }, 3000);
+});
+
+/* ---------- avvio ---------- */
+function renderAll() { renderHeader(); renderDiet(); renderDiary(); renderSpesa(); }
+window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); S.installEvt = e; if (S.sheet && S.sheet.type === "backup") renderBackup(); });
+window.addEventListener("appinstalled", () => { S.installEvt = null; toast("App installata"); });
+loadAll();
+setTab((location.hash || "").replace("#", "") || "diario", false);
+renderAll();
+if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+</script>
+</body>
+</html>
