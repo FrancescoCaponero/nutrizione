@@ -1,5 +1,5 @@
 // Offline cache for Nutrizione: the page is fetched fresh when online, everything else is served from cache first.
-const CACHE = "nutrizione-v3";
+const CACHE = "nutrizione-v4";
 const SHELL = [
   "./",
   "./index.html",
